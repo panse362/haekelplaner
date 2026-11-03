@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#234b3c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Häkelplaner">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>Häkelplaner – Kästchenmuster & Reihenanleitung</title>
+  <style>
+    :root { color-scheme: light; --ink:#23312d; --muted:#64736c; --line:#d7e0da; --paper:#fffefa; --green:#356a53; --pale:#eef4ef; --accent:#d27850; }
+    * { box-sizing:border-box }
+    body { margin:0; background:#f2f5f1; color:var(--ink); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif }
+    header { background:#234b3c; color:white; padding:24px clamp(18px,4vw,48px) }
+    header h1 { margin:0 0 5px; font-size:clamp(1.5rem,3vw,2.1rem) }
+    header p { margin:0; color:#dce9df }
+    main { max-width:1400px; margin:0 auto; padding:22px clamp(12px,3vw,32px) 48px }
+    .layout { display:grid; grid-template-columns:minmax(270px,340px) minmax(0,1fr); gap:18px; align-items:start }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 3px 14px #1c39220a }
+    h2 { margin:0 0 14px; font-size:1.15rem }
+    h3 { margin:20px 0 8px; font-size:1rem }
+    .field { display:grid; gap:5px; margin:12px 0 }
+    label { font-weight:650 }
+    input,select,button { font:inherit }
+    input[type=number], input[type=text], select { width:100%; border:1px solid #bccbc0; border-radius:8px; padding:9px 10px; background:#fff; color:var(--ink) }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:10px }
+    button { border:0; border-radius:9px; padding:9px 13px; cursor:pointer; font-weight:650 }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #e4a283; outline-offset:2px }
+    .primary { color:#fff; background:var(--green) }
+    .secondary { background:#e9f0eb; color:#244b3c; border:1px solid #cbd9ce }
+    .danger { background:#fff0e9; color:#854323; border:1px solid #efd2c4 }
+    .buttons { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px }
+    .hint { color:var(--muted); font-size:.9rem; margin:.45em 0 }
+    .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:.9rem }
+    .swatch { display:inline-block; width:18px; height:18px; vertical-align:middle; border:1px solid #708078; margin-right:5px }
+    .swatch.full { background:#344b40 }
+    .chart-wrap { overflow:auto; max-height:72vh; border:1px solid var(--line); background:white; border-radius:8px; padding:12px }
+    #chart { display:grid; width:max-content; margin:auto; user-select:none; touch-action:manipulation }
+    .cell { width:var(--cell-size, 27px); height:var(--cell-size, 27px); border:1px solid #aab7ae; background:#fff; padding:0; border-radius:0; min-width:0; touch-action:manipulation }
+    .cell.filled { background:#344b40 }
+    .cell:hover { box-shadow:inset 0 0 0 2px var(--accent) }
+    .rownum { width:30px; height:var(--cell-size, 27px); display:flex; align-items:center; justify-content:center; color:#6b7971; font-size:12px }
+    .colnum { width:var(--cell-size, 27px); height:22px; text-align:center; color:#6b7971; font-size:11px }
+    .chart-top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px }
+    .chart-top h2 { margin:0 }
+    .instructions { margin-top:18px }
+    .pattern-name { font-weight:700 }
+    #output { white-space:pre-wrap; font:15px/1.55 system-ui,sans-serif; background:#f7f9f6; border:1px solid var(--line); padding:14px; border-radius:8px; min-height:140px }
+    .tip { background:#fff8e8; border-left:4px solid #d99d42; padding:11px 13px; border-radius:5px; font-size:.92rem }
+    .file-label { display:inline-flex; align-items:center; gap:7px }
+    .install-note { background:#eaf2ec; border:1px solid #cbd9ce; border-radius:9px; padding:10px 12px; color:#244b3c; font-size:.9rem; margin-top:14px }
+    .zoom { display:flex; align-items:center; gap:7px }
+    .zoom button { min-width:42px; min-height:42px; padding:7px }
+    #fileInput { display:none }
+    footer { color:var(--muted); text-align:center; font-size:.85rem; padding:22px }
+    @media(max-width:850px) { .layout { grid-template-columns:1fr } .chart-wrap { max-height:60vh; padding:8px } .card { padding:14px } }
+    @media(max-width:520px) { header { padding:18px 16px } main { padding:12px 9px 30px } .cell { width:var(--cell-size, 32px); height:var(--cell-size, 32px) } .colnum { width:var(--cell-size, 32px) } .rownum { height:var(--cell-size, 32px) } .buttons button { min-height:44px } .chart-top { align-items:flex-start } }
+    @media print { body { background:#fff } header { background:#fff; color:#000; padding:0 0 12px } header p { color:#333 } main { padding:0; max-width:none } .layout { display:block } .controls, .buttons, .chart-top button, footer { display:none!important } .card { border:0; box-shadow:none; padding:4px 0 } .chart-wrap { max-height:none; overflow:visible; border:0; padding:0 } #chart { --cell-size:17px } .cell { width:17px; height:17px; print-color-adjust:exact; -webkit-print-color-adjust:exact } .colnum { width:17px; height:16px; font-size:8px } .rownum { height:17px; font-size:9px } .instructions { break-before:page } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Häkelplaner</h1>
+    <p>Kästchenmuster entwerfen, Reihe für Reihe lesen und als Anleitung drucken.</p>
+  </header>
+  <main>
+    <div class="layout">
+      <aside class="card controls">
+        <h2>Dein Muster</h2>
+        <div class="field"><label for="name">Name des Musters</label><input id="name" type="text" value="Mein Filetmuster" maxlength="80"></div>
+        <div class="two">
+          <div class="field"><label for="cols">Kästchen breit</label><input id="cols" type="number" min="1" max="100" value="24"></div>
+          <div class="field"><label for="rows">Reihen hoch</label><input id="rows" type="number" min="1" max="150" value="32"></div>
+        </div>
+        <div class="field"><label for="reading">Leserichtung</label><select id="reading"><option value="snake">Hin- und Rückreihen (abwechselnd)</option><option value="right">Jede Reihe von rechts nach links</option><option value="left">Jede Reihe von links nach rechts</option></select></div>
+        <div class="buttons">
+          <button class="primary" id="resize">Raster anwenden</button>
+          <button class="secondary" id="clear">Raster leeren</button>
+          <button class="secondary" id="invert">Muster umkehren</button>
+        </div>
+        <h3>So zeichnest du</h3>
+        <p class="hint">Klicke Kästchen an, um sie zu füllen oder wieder zu öffnen. Beginne mit dem Motiv; der leere Hintergrund bleibt als Netz sichtbar.</p>
+        <div class="legend"><span><i class="swatch"></i>offenes Kästchen</span><span><i class="swatch full"></i>gefülltes Kästchen</span></div>
+        <div class="tip" style="margin-top:16px"><b>Filethäkel-Hinweis:</b> Die App beschreibt Reihen in Kästchen. Maschenzahl für Anschlag, Rand und Wendeluftmaschen hängt von der Legende und deiner Filet-Technik ab. Mache zuerst eine Maschenprobe.</div>
+        <h3>Datei</h3>
+        <div class="buttons">
+          <button class="secondary" id="save">Muster speichern</button>
+          <label class="secondary file-label" for="fileInput" style="cursor:pointer;padding:9px 13px;border-radius:9px;font-weight:650">Muster laden<input id="fileInput" type="file" accept=".json,application/json"></label>
+        </div>
+        <div class="install-note"><b>Auf dem Handy installieren</b><br>Öffne diese App über ihre Webadresse. Android: Browsermenü → „App installieren“. iPhone: Safari → Teilen → „Zum Home-Bildschirm“.</div>
+      </aside>
+      <section>
+        <div class="card">
+          <div class="chart-top"><h2>Musterraster</h2><div class="buttons"><div class="zoom" aria-label="Rastergröße"><button class="secondary" id="zoomOut" aria-label="Raster verkleinern">−</button><button class="secondary" id="zoomIn" aria-label="Raster vergrößern">+</button></div><button class="secondary" id="print">Drucken / als PDF speichern</button></div></div>
+          <div class="chart-wrap"><div id="chart" role="grid" aria-label="Häkelmuster-Raster"></div></div>
+          <p class="hint">Die Reihen sind von unten nach oben nummeriert. Auf dem Handy kannst du das Raster seitlich verschieben und mit + / − vergrößern.</p>
+        </div>
+        <div class="card instructions">
+          <h2>Reihenanleitung</h2>
+          <p class="hint">Gleiche Kästchen werden zusammengefasst. Die Richtungsangabe hilft dir, das Diagramm beim Häkeln nachzuvollziehen.</p>
+          <div id="output" aria-live="polite"></div>
+          <div class="buttons"><button class="primary" id="copy">Anleitung kopieren</button></div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>Dein Muster bleibt auf diesem Gerät. Beim Speichern wird eine JSON-Datei heruntergeladen.</footer>
+  <script>
+    (() => {
+      const $ = id => document.getElementById(id);
+      let cols = 24, rows = 32;
+      let grid = Array.from({length: rows}, () => Array(cols).fill(false));
+      let cellSize = window.matchMedia('(max-width: 520px)').matches ? 32 : 27;
+      const clamp = (n, min, max) => Math.max(min, Math.min(max, Math.floor(Number(n) || min)));
+      function render() {
+        const chart = $('chart');
+        chart.innerHTML = '';
+        chart.style.setProperty('--cell-size', `${cellSize}px`);
+        chart.style.gridTemplateColumns = `30px repeat(${cols}, var(--cell-size))`;
+        const corner = document.createElement('div'); chart.append(corner);
+        for (let c=0;c<cols;c++) { const el=document.createElement('div'); el.className='colnum'; el.textContent=c+1; chart.append(el); }
+        for (let visual=0;visual<rows;visual++) {
+          const r=rows-1-visual;
+          const num=document.createElement('div'); num.className='rownum'; num.textContent=r+1; chart.append(num);
+          for (let c=0;c<cols;c++) {
+            const b=document.createElement('button'); b.type='button'; b.className='cell'+(grid[r][c]?' filled':'');
+            b.setAttribute('role','gridcell'); b.setAttribute('aria-label',`Reihe ${r+1}, Kästchen ${c+1}, ${grid[r][c]?'gefüllt':'offen'}`);
+            b.setAttribute('aria-pressed',grid[r][c]); b.title=`Reihe ${r+1}, Kästchen ${c+1}`;
+            b.addEventListener('click',()=>{grid[r][c]=!grid[r][c]; render();}); chart.append(b);
+          }
+        }
+        makeInstructions();
+      }
+      function makeInstructions() {
+        const direction=$('reading').value;
+        const lines=[$('name').value.trim() || 'Häkelmuster', `${cols} Kästchen breit · ${rows} Reihen`, '', 'Legende: offen = Netzfeld; gefüllt = geschlossenes Feld.', 'Die genaue Maschenfolge pro Feld und die Wendeluftmaschen nach deiner Filet-Legende arbeiten.', ''];
+        for (let r=0;r<rows;r++) {
+          // Row 1 is at the bottom of the chart and starts at its right edge.
+          const reverse = direction==='right' || (direction==='snake' && r%2===0);
+          const indexes=Array.from({length:cols},(_,i)=>reverse?cols-1-i:i);
+          const runs=[];
+          for (const c of indexes) {
+            const kind=grid[r][c]?'gefüllte':'offene';
+            const last=runs[runs.length-1];
+            if(last && last.kind===kind) last.count++;
+            else runs.push({kind,count:1});
+          }
+          const dir=reverse?'von rechts nach links':'von links nach rechts';
+          lines.push(`Reihe ${r+1} (${dir}): `+runs.map(x=>`${x.count} ${x.kind} Kästchen`).join(', ')+'.');
+        }
+        $('output').textContent=lines.join('\n');
+        try { localStorage.setItem('haekelplaner-autosave', JSON.stringify({name:$('name').value,cols,rows,reading:$('reading').value,grid})); } catch {}
+      }
+      function resizeGrid() {
+        const newCols=clamp($('cols').value,1,100), newRows=clamp($('rows').value,1,150);
+        const next=Array.from({length:newRows},(_,r)=>Array.from({length:newCols},(_,c)=>grid[r]?.[c]||false));
+        cols=newCols; rows=newRows; grid=next; $('cols').value=cols; $('rows').value=rows; render();
+      }
+      $('resize').addEventListener('click',resizeGrid);
+      $('clear').addEventListener('click',()=>{grid=Array.from({length:rows},()=>Array(cols).fill(false));render();});
+      $('invert').addEventListener('click',()=>{grid=grid.map(row=>row.map(v=>!v));render();});
+      $('reading').addEventListener('change',makeInstructions);
+      $('name').addEventListener('input',makeInstructions);
+      $('zoomIn').addEventListener('click',()=>{cellSize=clamp(cellSize+4,18,56);render();});
+      $('zoomOut').addEventListener('click',()=>{cellSize=clamp(cellSize-4,18,56);render();});
+      $('print').addEventListener('click',()=>window.print());
+      $('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('output').textContent);$('copy').textContent='Kopiert!';setTimeout(()=>$('copy').textContent='Anleitung kopieren',1400);}catch{alert('Kopieren nicht möglich. Du kannst den Text markieren und manuell kopieren.');}});
+      $('save').addEventListener('click',()=>{
+        const data={format:'haekelplaner-v1',name:$('name').value,cols,rows,reading:$('reading').value,grid};
+        const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=url;a.download=(($('name').value||'haekelmuster').replace(/[^a-z0-9-_äöüß]+/gi,'_'))+'.json';a.click();URL.revokeObjectURL(url);
+      });
+      $('fileInput').addEventListener('change',async e=>{
+        const file=e.target.files[0];if(!file)return;
+        try { const d=JSON.parse(await file.text());if(!Array.isArray(d.grid)||!d.grid.length)throw Error();
+          rows=clamp(d.rows||d.grid.length,1,150);cols=clamp(d.cols||d.grid[0].length,1,100);
+          grid=Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>!!d.grid[r]?.[c]));
+          $('rows').value=rows;$('cols').value=cols;$('name').value=d.name||'Mein Filetmuster';$('reading').value=['snake','right','left'].includes(d.reading)?d.reading:'snake';render();
+        } catch { alert('Die Datei konnte nicht als Häkelplaner-Muster gelesen werden.'); }
+        e.target.value='';
+      });
+      try {
+        const d=JSON.parse(localStorage.getItem('haekelplaner-autosave')||'null');
+        if (d && Array.isArray(d.grid) && d.grid.length) {
+          rows=clamp(d.rows||d.grid.length,1,150); cols=clamp(d.cols||d.grid[0].length,1,100);
+          grid=Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>!!d.grid[r]?.[c]));
+          $('rows').value=rows; $('cols').value=cols; $('name').value=d.name||'Mein Filetmuster';
+          $('reading').value=['snake','right','left'].includes(d.reading)?d.reading:'snake';
+        }
+      } catch {}
+      render();
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    })();
+  </script>
+</body>
+</html>
